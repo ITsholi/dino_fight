@@ -1,0 +1,430 @@
+import pygame, time, random
+
+dis = 0
+eis = 0
+FPS = 30
+W = 800
+H = 540
+pygame.init()
+sc = pygame.display.set_mode((W, H))
+sc.fill((255, 255, 255))
+pygame.display.set_caption("Dino fight! by Dino")
+clock = pygame.time.Clock()
+
+bg1_img = pygame.image.load('images/bg1.png').convert()
+bg1_rect = bg1_img.get_rect(center=(W // 2, H // 2))
+
+forest_img = pygame.image.load('images/forest.png').convert()
+forest_rest = forest_img.get_rect(center=(0, 0))
+
+coins_counter_img = pygame.image.load('images/coins_counter.png').convert_alpha()
+coins_counter_rest = forest_img.get_rect(center=(1080, 280))
+coins_counter_img = pygame.transform.scale(coins_counter_img,
+                                           (coins_counter_img.get_width() * 6, coins_counter_img.get_height() * 5))
+coins_counter_img.set_colorkey((0, 0, 0))
+
+lvl_counter_img = pygame.image.load('images/lvl_counter.png').convert_alpha()
+lvl_counter_rest = lvl_counter_img.get_rect(center=(425, 18))
+lvl_counter_img = pygame.transform.scale(lvl_counter_img,
+                                         (lvl_counter_img.get_width() * 10, lvl_counter_img.get_height() * 5))
+lvl_counter_img.set_colorkey((255, 0, 0))
+
+lvl_img = pygame.image.load('images/lvl.png').convert()
+lvl_rest = lvl_img.get_rect(center=(525, 43))
+lvl_img = pygame.transform.scale(lvl_img,
+                                 (int(lvl_counter_img.get_width() / 4), int(lvl_counter_img.get_height() / 1.75)))
+lvl_img.set_colorkey((15, 15, 15))
+
+coin_img = pygame.image.load('images/coin.png').convert()
+coin_rest = forest_img.get_rect(center=(1092, 306))
+coin_img = pygame.transform.scale(coin_img, (coin_img.get_width() * 2, coin_img.get_height() * 2))
+
+button_img = pygame.image.load('images/button.png')
+button_img = pygame.transform.scale(button_img, (button_img.get_width() * 3, button_img.get_height() * 3))
+leave_button_rest = button_img.get_rect(center=(125, 125))
+di_button_rest = button_img.get_rect(center=(225, 290))
+ei_button_rest = button_img.get_rect(center=(625, 290))
+
+info_table_img = pygame.image.load('images/info_table.png')
+info_table_img = pygame.transform.scale(info_table_img,
+                                        (info_table_img.get_width() * 3, info_table_img.get_height() * 3))
+di_info_table_rest = button_img.get_rect(center=(200, 248))
+ei_info_table_rest = button_img.get_rect(center=(600, 248))
+
+dino_img = pygame.image.load('images/dino.png').convert()
+dino_img = pygame.transform.scale(dino_img, (dino_img.get_width() * 5, dino_img.get_width() * 5))
+dino_rect = dino_img.get_rect(center=(400, H - 80))
+dino_img.set_colorkey((0, 0, 0))
+
+dino_right = dino_img
+dino_left = pygame.transform.flip(dino_img, 1, 0)
+bgc = 0
+dino = dino_right
+speed = 8
+move_right = False
+move_left = False
+run = True
+left = False
+right = False
+dino_anim_counter = 0
+dino_walk_right = [
+    pygame.image.load('images/dino_walk1_2.png'), pygame.image.load('images/dino_walk2_2.png')
+]
+dino_walk_left = [
+    pygame.image.load('images/dino_walk1_2_flip.png'), pygame.image.load('images/dino_walk2_2_flip.png')
+]
+
+dino_walk_right[0] = pygame.transform.scale(dino_walk_right[0],
+                                            (dino_walk_right[0].get_width() * 5, dino_walk_right[0].get_width() * 5))
+dino_walk_right[1] = pygame.transform.scale(dino_walk_right[1],
+                                            (dino_walk_right[1].get_width() * 5, dino_walk_right[1].get_width() * 5))
+
+dino_walk_left[0] = pygame.transform.scale(dino_walk_left[0],
+                                           (dino_walk_left[0].get_width() * 5, dino_walk_left[0].get_width() * 5))
+dino_walk_left[1] = pygame.transform.scale(dino_walk_left[1],
+                                           (dino_walk_left[1].get_width() * 5, dino_walk_left[1].get_width() * 5))
+
+enemy_img = [
+    pygame.image.load('images/enemy_0.png')
+]
+enemy_img[0] = pygame.transform.scale(enemy_img[0],
+                                      (int(enemy_img[0].get_width() / 2), int(enemy_img[0].get_height() / 2)))
+
+attack_img = pygame.image.load('images/attack.png').convert_alpha()
+protect_img = pygame.image.load('images/protect.png').convert_alpha()
+bonus_img = pygame.image.load('images/bonus.png').convert_alpha()
+score_img = pygame.image.load('images/score.png').convert_alpha()
+attack_img = pygame.transform.scale(attack_img, (attack_img.get_width() * 2, attack_img.get_width() * 2))
+protect_img = pygame.transform.scale(protect_img, (attack_img.get_width(), attack_img.get_width()))
+bonus_img = pygame.transform.scale(bonus_img, (attack_img.get_width(), attack_img.get_width()))
+score_img = pygame.transform.scale(score_img, (attack_img.get_width(), attack_img.get_width()))
+
+max_dino_hp = 100
+dino_hp = 100
+dino_armor = 5
+dino_dmg = 5
+dino_lvl = 1
+dino_xp = 0
+dino_lvl_xp_need = 10
+dino_is_dead = False
+dino_attack = 0
+dino_protect = 0
+dino_bonus = 0
+dino_score = 3
+
+max_enemy_hp = 30
+enemy_hp = 30
+enemy_armor = 1
+enemy_dmg = 9
+enemy_is_dead = False
+ei_attack = 0
+ei_protect = 0
+ei_bonus = 0
+ei_score = 3
+
+coins_pos = 41
+coin = 10
+
+dxb = 0
+dyb = 0
+dwb = 0
+dhb = 0
+exb = 0
+eyb = 0
+ewb = 0
+ehb = 0
+dib = 0
+eib = 0
+
+pygame.font.init()
+pfont = pygame.font.Font('fonts/font.ttf', 48)
+cfont = pygame.font.Font('fonts/font.ttf', 48)
+
+
+class Enemy():
+    def __init__(self):
+        self.enemy_num = 0
+        self.x = 540
+        self.y = 350
+
+    def place(self):
+        global enemy_img
+        if self.enemy_num == 0:
+            sc.blit(enemy_img[0], (self.x - 50, self.y - 50))
+
+
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (
+                self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def isOver(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        global bgc
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+        return False
+
+
+leave = button((255, 255, 255), 60, 90, 128, 65, "Leave")
+attack = button((255, 255, 255), 333, 340, 48, 48, "")
+protect = button((255, 255, 255), 333, 390, 48, 48, "")
+bonus = button((255, 255, 255), 333, 440, 48, 48, "")
+
+
+def bg_changer():
+    global bgc
+    global bg_switch
+    if (bgc == 0 and dino_rect.x >= W):
+        bgc += 1
+        dino_rect.x = 10
+        bg_switch = True
+
+
+def draw():
+    global dino_anim_counter
+    global bgc
+    global dxb
+    global dyb
+    global dwb
+    global dhb
+    global exb
+    global eyb
+    global ewb
+    global ehb
+    global dib
+    global eib
+    if bgc == 0:
+        sc.blit(bg1_img, (0, 0))
+        dino_rect.y = H - 140
+    elif bgc == 1:
+        sc.blit(forest_img, (0, 0))
+        dino_rect.y = H - 180
+        dino_rect.x = 150
+        sc.blit(button_img, (leave_button_rest.x, leave_button_rest.y))
+        sc.blit(info_table_img, (di_info_table_rest.x, di_info_table_rest.y))
+        sc.blit(info_table_img, (ei_info_table_rest.x, ei_info_table_rest.y))
+        sc.blit(attack_img, (333, 340))
+        sc.blit(protect_img, (333, 390))
+        sc.blit(bonus_img, (333, 440))
+        sc.blit(score_img, (333, 490))
+        sc.blit(score_img, (333 + 48, 490 - 48))
+        sc.blit(score_img, (333 + 48, 490 - 98))
+        sc.blit(score_img, (333 + 48, 490 - 148))
+        sc.blit(attack_img, (490, 340))
+        sc.blit(protect_img, (490, 390))
+        sc.blit(bonus_img, (490, 440))
+        sc.blit(score_img, (490 - 48, 490 - 48))
+        sc.blit(score_img, (490 - 48, 490 - 98))
+        sc.blit(score_img, (490 - 48, 490 - 148))
+        sc.blit(score_img, (490, 490))
+        dino_info()
+        enemy_info()
+        draw_leave()
+        if enemy_is_dead == False:
+            enemy = Enemy()
+            enemy.place()
+
+    if dino_anim_counter + 1 >= 10:
+        dino_anim_counter = 0
+    if left:
+        sc.blit(dino_walk_left[dino_anim_counter // 5], (dino_rect.x, dino_rect.y))
+        dino_anim_counter += 1
+    elif right:
+        sc.blit(dino_walk_right[dino_anim_counter // 5], (dino_rect.x, dino_rect.y))
+        dino_anim_counter += 1
+    else:
+        sc.blit(dino, (dino_rect.x, dino_rect.y))
+    coins()
+    lvls()
+    pygame.display.update()
+
+
+def draw_leave():
+    leave_b = pfont.render("Leave", 1, (255, 255, 255))
+    sc.blit(leave_b, (90, 103))
+
+
+def dino_info():
+    global pfont
+    hp_dino = pfont.render("HP: ", 1, (255, 255, 255))
+    dino_max_hp = pfont.render(str(dino_hp) + "/" + str(max_dino_hp), 1, (255, 0, 0))
+    armor_dino = pfont.render("ARMOR:", 1, (255, 255, 255))
+    armor_dino_value = pfont.render(str(dino_armor), 1, (0, 255, 255))
+    dmg_dino = pfont.render("DMG:", 1, (255, 255, 255))
+    dmg_dino_value = pfont.render(str(dino_dmg), 1, (153, 0, 0))
+    score = pfont.render(str(dino_score), 1, (255, 255, 255))
+    dino_attack_ = pfont.render(str(ei_attack), 1, (255, 255, 255))
+    dino_protect_ = pfont.render(str(ei_protect), 1, (255, 255, 255))
+    dino_bonus_ = pfont.render(str(ei_bonus), 1, (255, 255, 255))
+
+    sc.blit(score, (351, 492))
+    sc.blit(dino_attack_, (490 - 30, 490 - 148))
+    sc.blit(dino_protect_, (490 - 30, 490 - 98))
+    sc.blit(dino_bonus_, (490 - 30, 490 - 48))
+    sc.blit(hp_dino, (di_info_table_rest.x + 15, di_info_table_rest.y + 8))
+    sc.blit(dino_max_hp, (di_info_table_rest.x + 80, di_info_table_rest.y + 8))
+    sc.blit(armor_dino, (di_info_table_rest.x + 15, di_info_table_rest.y + 42))
+    sc.blit(armor_dino_value, (di_info_table_rest.x + 115, di_info_table_rest.y + 42))
+    sc.blit(dmg_dino, (di_info_table_rest.x + 15, di_info_table_rest.y + 75))
+    sc.blit(dmg_dino_value, (di_info_table_rest.x + 115, di_info_table_rest.y + 75))
+
+
+def enemy_info():
+    global pfont
+    hp_enemy = pfont.render("HP: ", 1, (255, 255, 255))
+    enemy_max_hp = pfont.render(str(enemy_hp) + "/" + str(max_enemy_hp), 1, (255, 0, 0))
+    armor_enemy = pfont.render("ARMOR:", 1, (255, 255, 255))
+    armor_enemy_value = pfont.render(str(enemy_armor), 1, (0, 255, 255))
+    dmg_enemy = pfont.render("DMG:", 1, (255, 255, 255))
+    dmg_enemy_value = pfont.render(str(enemy_dmg), 1, (153, 0, 0))
+    score = pfont.render(str(ei_score), 1, (255, 255, 255))
+    ei_attack_ = pfont.render(str(dino_attack), 1, (255, 255, 255))
+    ei_protect_ = pfont.render(str(dino_protect), 1, (255, 255, 255))
+    ei_bonus_ = pfont.render(str(dino_bonus), 1, (255, 255, 255))
+
+    sc.blit(score, (508, 492))
+    sc.blit(ei_attack_, (333 + 48 + 18, 490 - 148))
+    sc.blit(ei_protect_, (333 + 48 + 18, 490 - 98))
+    sc.blit(ei_bonus_, (333 + 48 + 18, 490 - 48))
+    sc.blit(hp_enemy, (ei_info_table_rest.x + 15, ei_info_table_rest.y + 8))
+    sc.blit(enemy_max_hp, (ei_info_table_rest.x + 80, ei_info_table_rest.y + 8))
+    sc.blit(armor_enemy, (ei_info_table_rest.x + 15, ei_info_table_rest.y + 42))
+    sc.blit(armor_enemy_value, (ei_info_table_rest.x + 115, ei_info_table_rest.y + 42))
+    sc.blit(dmg_enemy, (ei_info_table_rest.x + 15, ei_info_table_rest.y + 75))
+    sc.blit(dmg_enemy_value, (ei_info_table_rest.x + 115, ei_info_table_rest.y + 75))
+
+
+def coins():
+    global cfont
+    global coins_pos
+    global coin
+    if coin > 999:
+        coin = 999
+    coins_counter = cfont.render(str(coin), 1, (255, 255, 255))
+
+    sc.blit(coins_counter_img, (coins_counter_rest.x, coins_counter_rest.y))
+    sc.blit(coins_counter, (coins_counter_rest.x + coins_pos, coins_counter_rest.y + 20))
+    sc.blit(coin_img, (coin_rest.x, coin_rest.y))
+
+
+def lvls():
+    global dino_lvl
+    global dino_lvl_xp_need
+    global dino_xp
+    if dino_xp >= dino_lvl_xp_need and dino_lvl <= 80:
+        dino_lvl += 1
+    if dino_lvl_xp_need < 10000 and dino_lvl_xp_need > 999:
+        xp_rect_x = 100
+    if dino_lvl_xp_need < 1000 and dino_lvl_xp_need > 99:
+        xp_rect_x = 115
+    if dino_lvl_xp_need < 100 and dino_lvl_xp_need > 9:
+        xp_rect_x = 130
+
+    xp_progress = cfont.render("XP:" + str(dino_lvl) + "/" + str(dino_lvl_xp_need), 1, (0, 191, 255))
+    lvl_progress = cfont.render("LvL:" + str(dino_lvl), 1, (0, 123, 167))
+
+    sc.blit(lvl_counter_img, (lvl_counter_rest.x, lvl_counter_rest.y))
+    sc.blit(xp_progress, (lvl_counter_rest.x + xp_rect_x, lvl_counter_rest.y + 20))
+    sc.blit(lvl_progress, (lvl_counter_rest.x + 25, lvl_counter_rest.y + 20))
+
+
+def buttons_forest():
+    global leave
+    global pos
+    global bgc
+    global bg_switch
+    global dino_attack
+    global dino_protect
+    global dino_bonus
+    global dino_score
+    if bgc == 1:
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            leave.isOver(pos)
+            if leave.isOver(pos):
+                bgc = 0
+                dino_rect.x = 400
+            if dino_score>0:
+                if attack.isOver(pos):
+                    dino_attack += 1
+                    dino_score -= 1
+                if protect.isOver(pos):
+                    dino_protect += 1
+                    dino_score -= 1
+                if bonus.isOver(pos):
+                    dino_bonus += 1
+                    dino_score -= 1
+
+
+def dino_walk():
+    global move_left
+    global move_right
+    if bgc != 1:
+        if move_left:
+            dino_rect.x -= speed
+        if move_right:
+            dino_rect.x += speed
+
+
+while run:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if bgc != 1:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_d:
+                    move_right = True
+                    right = True
+                    left = False
+                    dino = dino_right
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_d:
+                    move_right = False
+                    right = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    move_left = True
+                    left = True
+                    right = False
+                    dino = dino_left
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a:
+                    move_left = False
+                    left = False
+            if move_right == False and move_left == False:
+                right = False
+                left = False
+                dino_anim_counter = 0
+        if bgc == 1:
+            right = False
+            left = False
+            move_right = False
+            move_left = False
+            dino_anim_counter = 0
+        print(pygame.mouse.get_pos())
+        buttons_forest()
+    dino_walk()
+    bg_changer()
+    draw()
+    sc.fill((0, 0, 0))
+    clock.tick(FPS)
